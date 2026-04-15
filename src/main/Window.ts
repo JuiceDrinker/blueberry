@@ -2,6 +2,7 @@ import { BaseWindow } from "electron";
 import { Tab } from "./Tab";
 import { TopBar } from "./TopBar";
 import { SideBar } from "./SideBar";
+import { SessionManager } from "./SessionTracker";
 
 export class Window {
   private _baseWindow: BaseWindow;
@@ -10,6 +11,7 @@ export class Window {
   private tabCounter: number = 0;
   private _topBar: TopBar;
   private _sideBar: SideBar;
+  private _sessionManager: SessionManager;
 
   constructor() {
     // Create the browser window.
@@ -25,6 +27,7 @@ export class Window {
 
     this._baseWindow.setMinimumSize(1000, 800);
 
+    this._sessionManager = new SessionManager();
     this._topBar = new TopBar(this._baseWindow);
     this._sideBar = new SideBar(this._baseWindow);
 
@@ -83,7 +86,12 @@ export class Window {
   // Tab management methods
   createTab(url?: string): Tab {
     const tabId = `tab-${++this.tabCounter}`;
-    const tab = new Tab(tabId, url);
+    const tab = new Tab(tabId, this._sessionManager, url);
+    this._sessionManager.logEvent({
+      type: "tab-created",
+      tabId,
+      url,
+    });
 
     // Route window.open / target="_blank" to a new in-app tab instead of
     // letting Electron fall back to opening a detached window or the OS
@@ -124,6 +132,13 @@ export class Window {
     if (!tab) {
       return false;
     }
+
+    this._sessionManager.logEvent({
+      type: "tab-closed",
+      tabId,
+      url: tab.url,
+      title: tab.title,
+    });
 
     // Remove the WebContentsView from the window
     this._baseWindow.contentView.removeChildView(tab.view);
@@ -168,6 +183,13 @@ export class Window {
     // Show the new active tab
     tab.show();
     this.activeTabId = tabId;
+
+    this._sessionManager.logEvent({
+      type: "tab-switched",
+      tabId,
+      url: tab.url,
+      title: tab.title,
+    });
 
     // Update the window title to match the tab title
     this._baseWindow.setTitle(tab.title || "Blueberry Browser");
@@ -269,5 +291,9 @@ export class Window {
   // Getter for baseWindow to access from Menu
   get baseWindow(): BaseWindow {
     return this._baseWindow;
+  }
+
+  get sessionManager(): SessionManager {
+    return this._sessionManager;
   }
 }

@@ -1,4 +1,5 @@
 import { NativeImage, WebContentsView } from "electron";
+import type { SessionManager } from "./SessionTracker";
 
 export class Tab {
   private webContentsView: WebContentsView;
@@ -6,11 +7,17 @@ export class Tab {
   private _title: string;
   private _url: string;
   private _isVisible: boolean = false;
+  private sessionManager: SessionManager;
 
-  constructor(id: string, url: string = "https://www.google.com") {
+  constructor(
+    id: string,
+    sessionManager: SessionManager,
+    url: string = "https://www.google.com"
+  ) {
     this._id = id;
     this._url = url;
     this._title = "New Tab";
+    this.sessionManager = sessionManager;
 
     // Create the WebContentsView for web content only
     this.webContentsView = new WebContentsView({
@@ -30,18 +37,34 @@ export class Tab {
   }
 
   private setupEventListeners(): void {
-    // Update title when page title changes
     this.webContentsView.webContents.on("page-title-updated", (_, title) => {
       this._title = title;
+      this.sessionManager.logEvent({
+        type: "title-updated",
+        tabId: this._id,
+        title,
+        url: this._url,
+      });
     });
 
-    // Update URL when navigation occurs
     this.webContentsView.webContents.on("did-navigate", (_, url) => {
       this._url = url;
+      this.sessionManager.logEvent({
+        type: "navigation",
+        tabId: this._id,
+        url,
+        title: this._title,
+      });
     });
 
     this.webContentsView.webContents.on("did-navigate-in-page", (_, url) => {
       this._url = url;
+      this.sessionManager.logEvent({
+        type: "navigation",
+        tabId: this._id,
+        url,
+        title: this._title,
+      });
     });
   }
 
