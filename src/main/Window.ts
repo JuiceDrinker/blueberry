@@ -1,4 +1,4 @@
-import { BaseWindow, shell } from "electron";
+import { BaseWindow } from "electron";
 import { Tab } from "./Tab";
 import { TopBar } from "./TopBar";
 import { SideBar } from "./SideBar";
@@ -49,14 +49,6 @@ export class Window {
       }
     });
 
-    // Handle external link opening
-    this.tabsMap.forEach((tab) => {
-      tab.webContents.setWindowOpenHandler((details) => {
-        shell.openExternal(details.url);
-        return { action: "deny" };
-      });
-    });
-
     this.setupEventListeners();
   }
 
@@ -92,6 +84,14 @@ export class Window {
   createTab(url?: string): Tab {
     const tabId = `tab-${++this.tabCounter}`;
     const tab = new Tab(tabId, url);
+
+    // Route window.open / target="_blank" to a new in-app tab instead of
+    // letting Electron fall back to opening a detached window or the OS
+    // default browser.
+    tab.webContents.setWindowOpenHandler((details) => {
+      this.createTab(details.url);
+      return { action: "deny" };
+    });
 
     // Add the tab's WebContentsView to the window
     this._baseWindow.contentView.addChildView(tab.view);
