@@ -61,6 +61,29 @@ export class Window {
       this.tabsMap.forEach((tab) => tab.destroy());
       this.tabsMap.clear();
     });
+
+    this._baseWindow.on("focus", () => {
+      const tab = this.activeTab;
+      if (!tab) return;
+      this._sessionManager.logEvent({
+        type: "window-focused",
+        tabId: tab.id,
+        url: tab.url,
+        title: tab.title,
+      });
+      void tab.captureAndLog("window-focus");
+    });
+
+    this._baseWindow.on("blur", () => {
+      const tab = this.activeTab;
+      if (!tab) return;
+      this._sessionManager.logEvent({
+        type: "window-blurred",
+        tabId: tab.id,
+        url: tab.url,
+        title: tab.title,
+      });
+    });
   }
 
   // Getters
@@ -190,6 +213,10 @@ export class Window {
       url: tab.url,
       title: tab.title,
     });
+
+    setTimeout(() => {
+      void tab.captureAndLog("tab-switch");
+    }, 500);
 
     // Update the window title to match the tab title
     this._baseWindow.setTitle(tab.title || "Blueberry Browser");

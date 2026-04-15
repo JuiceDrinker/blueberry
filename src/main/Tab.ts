@@ -1,5 +1,9 @@
 import { NativeImage, WebContentsView } from "electron";
-import type { SessionManager } from "./SessionTracker";
+import type { ScreenshotReason, SessionManager } from "./SessionTracker";
+
+const NAVIGATION_SCREENSHOT_DEBOUNCE_MS = 1500;
+const IDLE_DWELL_MS = 15000;
+const SCREENSHOT_WIDTH = 800;
 
 export class Tab {
   private webContentsView: WebContentsView;
@@ -8,6 +12,8 @@ export class Tab {
   private _url: string;
   private _isVisible: boolean = false;
   private sessionManager: SessionManager;
+  private navigationScreenshotTimer: NodeJS.Timeout | null = null;
+  private idleDwellTimer: NodeJS.Timeout | null = null;
 
   constructor(
     id: string,
@@ -55,6 +61,8 @@ export class Tab {
         url,
         title: this._title,
       });
+      this.scheduleNavigationScreenshot();
+      this.resetIdleDwellTimer();
     });
 
     this.webContentsView.webContents.on("did-navigate-in-page", (_, url) => {
@@ -65,7 +73,49 @@ export class Tab {
         url,
         title: this._title,
       });
+      this.scheduleNavigationScreenshot();
+      this.resetIdleDwellTimer();
     });
+  }
+
+  private scheduleNavigationScreenshot(): void {
+    if (this.navigationScreenshotTimer) {
+      clearTimeout(this.navigationScreenshotTimer);
+    }
+    this.navigationScreenshotTimer = setTimeout(async () => {
+      this.navigationScreenshotTimer = null;
+      await this.captureAndLog("navigation");
+    }, NAVIGATION_SCREENSHOT_DEBOUNCE_MS);
+  }
+
+  private resetIdleDwellTimer(): void {
+    if (this.idleDwellTimer) {
+      clearTimeout(this.idleDwellTimer);
+    }
+    this.idleDwellTimer = setTimeout(async () => {
+      this.idleDwellTimer = null;
+      if (this._isVisible) {
+        await this.captureAndLog("idle-dwell");
+      }
+    }, IDLE_DWELL_MS);
+  }
+
+  async captureAndLog(reason: ScreenshotReason): Promise<void> {
+    try {
+      const image = await this.webContentsView.webContents.capturePage();
+      const resized = image.resize({ width: SCREENSHOT_WIDTH });
+      const dataUrl = resized.toDataURL();
+      this.sessionManager.logEvent({
+        type: "screenshot",
+        tabId: this._id,
+        url: this._url,
+        title: this._title,
+        screenshot: dataUrl,
+        reason,
+      });
+    } catch (err) {
+      console.error(`[Tab ${this._id}] screenshot failed:`, err);
+    }
   }
 
   // Getters
@@ -146,6 +196,14 @@ export class Tab {
   }
 
   destroy(): void {
+    if (this.navigationScreenshotTimer) {
+      clearTimeout(this.navigationScreenshotTimer);
+      this.navigationScreenshotTimer = null;
+    }
+    if (this.idleDwellTimer) {
+      clearTimeout(this.idleDwellTimer);
+      this.idleDwellTimer = null;
+    }
     this.webContentsView.webContents.close();
   }
 }
