@@ -4,6 +4,7 @@ import { TopBar } from "./TopBar";
 import { SideBar } from "./SideBar";
 import { SessionManager } from "./SessionTracker";
 import { FocusAgent } from "./FocusAgent";
+import { DistractionBlocker } from "./DistractionBlocker";
 
 export class Window {
   private _baseWindow: BaseWindow;
@@ -14,6 +15,7 @@ export class Window {
   private _sideBar: SideBar;
   private _sessionManager: SessionManager;
   private _focusAgent: FocusAgent;
+  private _distractionBlocker: DistractionBlocker;
 
   constructor() {
     // Create the browser window.
@@ -31,6 +33,7 @@ export class Window {
 
     this._sessionManager = new SessionManager();
     this._focusAgent = new FocusAgent(this._sessionManager);
+    this._distractionBlocker = new DistractionBlocker();
     this._topBar = new TopBar(this._baseWindow);
     this._sideBar = new SideBar(this._baseWindow);
 
@@ -332,5 +335,9 @@ export class Window {
 
   get focusAgent(): FocusAgent {
     return this._focusAgent;
+  }
+
+  get distractionBlocker(): DistractionBlocker {
+    return this._distractionBlocker;
   }
 }

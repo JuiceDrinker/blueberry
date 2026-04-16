@@ -56,6 +56,16 @@ const sidebarAPI = {
     electronAPI.ipcRenderer.removeAllListeners("task-list-updated");
   },
 
+  // Distraction blocking
+  focusOnTask: (taskTitle: string) =>
+    electronAPI.ipcRenderer.invoke("focus-on-task", taskTitle),
+
+  unfocusTask: () =>
+    electronAPI.ipcRenderer.invoke("unfocus-task"),
+
+  getBlockerState: () =>
+    electronAPI.ipcRenderer.invoke("get-blocker-state"),
+
   // Page content access
   getPageContent: () => electronAPI.ipcRenderer.invoke("get-page-content"),
   getPageText: () => electronAPI.ipcRenderer.invoke("get-page-text"),

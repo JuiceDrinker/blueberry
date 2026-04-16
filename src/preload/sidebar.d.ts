@@ -33,6 +33,11 @@ interface SidebarAPI {
   onTaskListUpdated: (callback: (data: any) => void) => void;
   removeTaskListUpdatedListener: () => void;
 
+  // Distraction blocking
+  focusOnTask: (taskTitle: string) => Promise<{ isBlocking: boolean; focusedTaskTitle: string | null }>;
+  unfocusTask: () => Promise<{ isBlocking: boolean; focusedTaskTitle: string | null }>;
+  getBlockerState: () => Promise<{ isBlocking: boolean; focusedTaskTitle: string | null }>;
+
   // Page content access
   getPageContent: () => Promise<string | null>;
   getPageText: () => Promise<string | null>;

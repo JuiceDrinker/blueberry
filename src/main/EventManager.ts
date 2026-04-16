@@ -31,12 +31,25 @@ export class EventManager {
 
   private handleFocusAgentEvents(): void {
     ipcMain.handle("focus-agent-trigger", async () => {
-      // Open sidebar if it's not visible
       if (!this.mainWindow.sidebar.getIsVisible()) {
         this.mainWindow.sidebar.toggle();
         this.mainWindow.updateAllBounds();
       }
       return this.mainWindow.focusAgent.generateTaskList();
+    });
+
+    ipcMain.handle("focus-on-task", (_, taskTitle: string) => {
+      this.mainWindow.distractionBlocker.startBlocking(taskTitle);
+      return this.mainWindow.distractionBlocker.getState();
+    });
+
+    ipcMain.handle("unfocus-task", () => {
+      this.mainWindow.distractionBlocker.stopBlocking();
+      return this.mainWindow.distractionBlocker.getState();
+    });
+
+    ipcMain.handle("get-blocker-state", () => {
+      return this.mainWindow.distractionBlocker.getState();
     });
   }
 
