@@ -28,6 +28,9 @@ interface TopBarAPI {
 
   // Sidebar
   toggleSidebar: () => Promise<void>;
+
+  // Focus agent
+  triggerFocusAgent: () => Promise<unknown>;
 }
 
 declare global {

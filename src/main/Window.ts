@@ -3,6 +3,7 @@ import { Tab } from "./Tab";
 import { TopBar } from "./TopBar";
 import { SideBar } from "./SideBar";
 import { SessionManager } from "./SessionTracker";
+import { FocusAgent } from "./FocusAgent";
 
 export class Window {
   private _baseWindow: BaseWindow;
@@ -12,6 +13,7 @@ export class Window {
   private _topBar: TopBar;
   private _sideBar: SideBar;
   private _sessionManager: SessionManager;
+  private _focusAgent: FocusAgent;
 
   constructor() {
     // Create the browser window.
@@ -28,11 +30,15 @@ export class Window {
     this._baseWindow.setMinimumSize(1000, 800);
 
     this._sessionManager = new SessionManager();
+    this._focusAgent = new FocusAgent(this._sessionManager);
     this._topBar = new TopBar(this._baseWindow);
     this._sideBar = new SideBar(this._baseWindow);
 
     // Set the window reference on the LLM client to avoid circular dependency
     this._sideBar.client.setWindow(this);
+
+    // Give FocusAgent access to sidebar webContents for pushing task list updates
+    this._focusAgent.setSidebarWebContents(this._sideBar.view.webContents);
 
     // Create the first tab
     this.createTab();
@@ -322,5 +328,9 @@ export class Window {
 
   get sessionManager(): SessionManager {
     return this._sessionManager;
+  }
+
+  get focusAgent(): FocusAgent {
+    return this._focusAgent;
   }
 }

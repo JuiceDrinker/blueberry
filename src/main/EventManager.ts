@@ -22,8 +22,22 @@ export class EventManager {
     // Dark mode events
     this.handleDarkModeEvents();
 
+    // Focus agent events
+    this.handleFocusAgentEvents();
+
     // Debug events
     this.handleDebugEvents();
+  }
+
+  private handleFocusAgentEvents(): void {
+    ipcMain.handle("focus-agent-trigger", async () => {
+      // Open sidebar if it's not visible
+      if (!this.mainWindow.sidebar.getIsVisible()) {
+        this.mainWindow.sidebar.toggle();
+        this.mainWindow.updateAllBounds();
+      }
+      return this.mainWindow.focusAgent.generateTaskList();
+    });
   }
 
   private handleTabEvents(): void {

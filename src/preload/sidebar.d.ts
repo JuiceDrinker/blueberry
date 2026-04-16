@@ -29,6 +29,10 @@ interface SidebarAPI {
   onChatResponse: (callback: (data: ChatResponse) => void) => void;
   removeChatResponseListener: () => void;
 
+  // Focus agent
+  onTaskListUpdated: (callback: (data: any) => void) => void;
+  removeTaskListUpdatedListener: () => void;
+
   // Page content access
   getPageContent: () => Promise<string | null>;
   getPageText: () => Promise<string | null>;

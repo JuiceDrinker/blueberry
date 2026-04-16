@@ -45,6 +45,17 @@ const sidebarAPI = {
     electronAPI.ipcRenderer.removeAllListeners("chat-messages-updated");
   },
 
+  // Focus agent
+  onTaskListUpdated: (callback: (data: any) => void) => {
+    electronAPI.ipcRenderer.on("task-list-updated", (_, data) =>
+      callback(data)
+    );
+  },
+
+  removeTaskListUpdatedListener: () => {
+    electronAPI.ipcRenderer.removeAllListeners("task-list-updated");
+  },
+
   // Page content access
   getPageContent: () => electronAPI.ipcRenderer.invoke("get-page-content"),
   getPageText: () => electronAPI.ipcRenderer.invoke("get-page-text"),

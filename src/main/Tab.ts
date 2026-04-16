@@ -103,6 +103,7 @@ export class Tab {
   async captureAndLog(reason: ScreenshotReason): Promise<void> {
     try {
       const image = await this.webContentsView.webContents.capturePage();
+      if (image.isEmpty()) return;
       const resized = image.resize({ width: SCREENSHOT_WIDTH });
       const dataUrl = resized.toDataURL();
       this.sessionManager.logEvent({

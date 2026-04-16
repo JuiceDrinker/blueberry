@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ArrowLeft, ArrowRight, RefreshCw, Loader2, PanelLeftClose, PanelLeft } from 'lucide-react'
+import { ArrowLeft, ArrowRight, RefreshCw, Loader2, PanelLeftClose, PanelLeft, Target } from 'lucide-react'
 import { useBrowser } from '../contexts/BrowserContext'
 import { ToolBarButton } from '../components/ToolBarButton'
 import { Favicon } from '../components/Favicon'
@@ -110,6 +110,12 @@ export const AddressBar: React.FC = () => {
         }
     }
 
+    const triggerFocusAgent = () => {
+        if (window.topBarAPI) {
+            window.topBarAPI.triggerFocusAgent()
+        }
+    }
+
     return (
         <>
             {/* Navigation Controls */}
@@ -196,6 +202,11 @@ export const AddressBar: React.FC = () => {
 
             {/* Actions Menu */}
             <div className="flex items-center gap-1 app-region-no-drag">
+                <ToolBarButton
+                    Icon={Target}
+                    onClick={triggerFocusAgent}
+                    active={true}
+                />
                 <DarkModeToggle />
                 <ToolBarButton
                     Icon={isSidebarOpen ? PanelLeftClose : PanelLeft}

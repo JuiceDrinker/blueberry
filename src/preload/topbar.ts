@@ -31,6 +31,10 @@ const topBarAPI = {
   // Sidebar
   toggleSidebar: () =>
     electronAPI.ipcRenderer.invoke("toggle-sidebar"),
+
+  // Focus agent
+  triggerFocusAgent: () =>
+    electronAPI.ipcRenderer.invoke("focus-agent-trigger"),
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to
