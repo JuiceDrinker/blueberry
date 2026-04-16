@@ -1,8 +1,9 @@
 import { app, BrowserWindow } from "electron";
-import { electronApp } from "@electron-toolkit/utils";
+import { electronApp, is } from "@electron-toolkit/utils";
 import { Window } from "./Window";
 import { AppMenu } from "./Menu";
 import { EventManager } from "./EventManager";
+import { runSimulation } from "./dev-simulate";
 
 let mainWindow: Window | null = null;
 let eventManager: EventManager | null = null;
@@ -19,6 +20,12 @@ app.whenReady().then(() => {
   electronApp.setAppUserModelId("com.electron");
 
   mainWindow = createWindow();
+
+  if (is.dev && process.env.SIMULATE_BROWSING) {
+    setTimeout(() => {
+      if (mainWindow) runSimulation(mainWindow);
+    }, 2000);
+  }
 
   app.on("activate", () => {
     // On macOS it's common to re-create a window in the app when the
