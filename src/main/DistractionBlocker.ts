@@ -42,7 +42,7 @@ export class DistractionBlocker {
           const url = new URL(details.url);
           const isDistraction = DISTRACTION_DOMAINS.some(
             (domain) =>
-              url.hostname === domain || url.hostname.endsWith(`.${domain}`)
+              url.hostname === domain || url.hostname.endsWith(`.${domain}`),
           );
 
           if (isDistraction) {
@@ -57,7 +57,7 @@ export class DistractionBlocker {
           // Invalid URL, let it through
         }
         callback({});
-      }
+      },
     );
 
     console.log(`[Blocker] Blocking distractions — focus on: "${taskTitle}"`);
@@ -75,7 +75,7 @@ export class DistractionBlocker {
         if (wc) {
           const html = this.buildBlockedPage(hostname);
           wc.loadURL(
-            `data:text/html;charset=utf-8,${encodeURIComponent(html)}`
+            `data:text/html;charset=utf-8,${encodeURIComponent(html)}`,
           );
         }
       } catch (err) {
@@ -87,7 +87,7 @@ export class DistractionBlocker {
   stopBlocking(): void {
     if (!this.isBlocking) return;
 
-    session.defaultSession.webRequest.onBeforeRequest(null as any);
+    session.defaultSession.webRequest.onBeforeRequest(null);
     this.pendingBlockedPages.clear();
     this.isBlocking = false;
 
@@ -102,7 +102,19 @@ export class DistractionBlocker {
     };
   }
 
+  private escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
   private buildBlockedPage(hostname: string): string {
+    const safeHostname = this.escapeHtml(hostname);
+    const safeTask = this.escapeHtml(
+      this.focusedTaskTitle || "Your current task",
+    );
     return `<!DOCTYPE html>
 <html>
 <head>
@@ -143,9 +155,9 @@ export class DistractionBlocker {
 <body>
   <div class="container">
     <div class="emoji">🫐</div>
-    <h1>${hostname} is blocked</h1>
+    <h1>${safeHostname} is blocked</h1>
     <p>You asked Blueberry to help you focus. Finish your task first, then come back.</p>
-    <div class="task">${this.focusedTaskTitle || "Your current task"}</div>
+    <div class="task">${safeTask}</div>
   </div>
 </body>
 </html>`;

@@ -31,7 +31,7 @@ interface SidebarAPI {
 
   // Focus agent
   onFocusAgentLoading: (callback: () => void) => void;
-  onTaskListUpdated: (callback: (data: any) => void) => void;
+  onTaskListUpdated: (callback: (data: Record<string, unknown>) => void) => void;
   removeFocusAgentListeners: () => void;
 
   // Tab actions from focus panel
@@ -39,9 +39,17 @@ interface SidebarAPI {
   closeTab: (tabId: string) => Promise<void>;
 
   // Distraction blocking
-  focusOnTask: (taskTitle: string) => Promise<{ isBlocking: boolean; focusedTaskTitle: string | null }>;
-  unfocusTask: () => Promise<{ isBlocking: boolean; focusedTaskTitle: string | null }>;
-  getBlockerState: () => Promise<{ isBlocking: boolean; focusedTaskTitle: string | null }>;
+  focusOnTask: (
+    taskTitle: string,
+  ) => Promise<{ isBlocking: boolean; focusedTaskTitle: string | null }>;
+  unfocusTask: () => Promise<{
+    isBlocking: boolean;
+    focusedTaskTitle: string | null;
+  }>;
+  getBlockerState: () => Promise<{
+    isBlocking: boolean;
+    focusedTaskTitle: string | null;
+  }>;
 
   // Page content access
   getPageContent: () => Promise<string | null>;
@@ -58,4 +66,3 @@ declare global {
     sidebarAPI: SidebarAPI;
   }
 }
-

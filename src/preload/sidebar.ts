@@ -33,7 +33,7 @@ const sidebarAPI = {
 
   onMessagesUpdated: (callback: (messages: any[]) => void) => {
     electronAPI.ipcRenderer.on("chat-messages-updated", (_, messages) =>
-      callback(messages)
+      callback(messages),
     );
   },
 
@@ -50,9 +50,9 @@ const sidebarAPI = {
     electronAPI.ipcRenderer.on("focus-agent-loading", () => callback());
   },
 
-  onTaskListUpdated: (callback: (data: any) => void) => {
+  onTaskListUpdated: (callback: (data: Record<string, unknown>) => void) => {
     electronAPI.ipcRenderer.on("task-list-updated", (_, data) =>
-      callback(data)
+      callback(data),
     );
   },
 
@@ -71,11 +71,9 @@ const sidebarAPI = {
   focusOnTask: (taskTitle: string) =>
     electronAPI.ipcRenderer.invoke("focus-on-task", taskTitle),
 
-  unfocusTask: () =>
-    electronAPI.ipcRenderer.invoke("unfocus-task"),
+  unfocusTask: () => electronAPI.ipcRenderer.invoke("unfocus-task"),
 
-  getBlockerState: () =>
-    electronAPI.ipcRenderer.invoke("get-blocker-state"),
+  getBlockerState: () => electronAPI.ipcRenderer.invoke("get-blocker-state"),
 
   // Page content access
   getPageContent: () => electronAPI.ipcRenderer.invoke("get-page-content"),

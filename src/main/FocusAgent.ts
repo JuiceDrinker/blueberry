@@ -1,8 +1,8 @@
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
-import type { WebContents } from "electron";
-import type { SessionEvent, SessionManager } from "./SessionTracker";
+import { EventEmitter } from "events";
+import type { SessionEvent, SessionManager } from "./SessionManager";
 
 const MODEL_NAME = process.env.FOCUS_AGENT_MODEL || "gpt-4o";
 const MAX_SCREENSHOTS_PER_CALL = 8;
@@ -67,36 +67,34 @@ export interface OpenTab {
   title: string;
 }
 
-export class FocusAgent {
+export interface FocusAgentEvents {
+  loading: [];
+  "task-list-updated": [taskList: TaskList];
+  "drift-detected": [];
+}
+
+export class FocusAgent extends EventEmitter<FocusAgentEvents> {
   private sessionManager: SessionManager;
-  private sidebarWebContents: WebContents | null = null;
   private lastTaskList: TaskList | null = null;
   private lastAutoTriggerTime = 0;
   private isGenerating = false;
-  private onAutoTrigger: (() => void) | null = null;
-  private getOpenTabs: (() => OpenTab[]) | null = null;
+  private openTabsProvider: (() => OpenTab[]) | null = null;
 
   constructor(sessionManager: SessionManager) {
+    super();
     this.sessionManager = sessionManager;
     this.sessionManager.onEvent((event) => this.checkDriftHeuristic(event));
   }
 
-  setSidebarWebContents(webContents: WebContents): void {
-    this.sidebarWebContents = webContents;
-  }
-
-  setAutoTriggerCallback(callback: () => void): void {
-    this.onAutoTrigger = callback;
-  }
-
   setOpenTabsProvider(provider: () => OpenTab[]): void {
-    this.getOpenTabs = provider;
+    this.openTabsProvider = provider;
   }
 
   getLastTaskList(): TaskList | null {
     return this.lastTaskList;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private checkDriftHeuristic(_event: SessionEvent): void {
     if (this.isGenerating) return;
 
@@ -105,11 +103,11 @@ export class FocusAgent {
 
     const events = this.sessionManager.getEvents();
     const recentEvents = events.filter(
-      (e) => now - e.timestamp < DRIFT_WINDOW_MS
+      (e) => now - e.timestamp < DRIFT_WINDOW_MS,
     );
 
     const tabSwitches = recentEvents.filter(
-      (e) => e.type === "tab-switched"
+      (e) => e.type === "tab-switched",
     ).length;
 
     const uniqueDomains = new Set(
@@ -122,7 +120,7 @@ export class FocusAgent {
             return null;
           }
         })
-        .filter(Boolean)
+        .filter(Boolean),
     );
 
     if (
@@ -130,14 +128,14 @@ export class FocusAgent {
       uniqueDomains.size >= MIN_UNIQUE_DOMAINS_FOR_DRIFT
     ) {
       console.log(
-        `[FocusAgent] Drift detected: ${tabSwitches} tab switches, ${uniqueDomains.size} domains in last 2 min`
+        `[FocusAgent] Drift detected: ${tabSwitches} tab switches, ${uniqueDomains.size} domains in last 2 min`,
       );
       this.lastAutoTriggerTime = now;
-      this.onAutoTrigger?.();
+      this.emit("drift-detected");
     }
   }
 
-  async generateTaskList(): Promise<TaskList | null> {
+  async trigger(): Promise<TaskList | null> {
     if (this.isGenerating) {
       console.log("[FocusAgent] Already generating — skipping.");
       return null;
@@ -150,10 +148,12 @@ export class FocusAgent {
       return null;
     }
 
+    this.emit("loading");
     this.isGenerating = true;
+
     const screenshots = this.pickScreenshots(events);
     const eventLog = this.serializeEventLog(events);
-    const openTabs = this.getOpenTabs?.() ?? [];
+    const openTabs = this.openTabsProvider?.() ?? [];
     const openTabsSummary = openTabs
       .map((t) => `${t.id}: ${t.url} "${t.title}"`)
       .join("\n");
@@ -162,7 +162,7 @@ export class FocusAgent {
       : "";
 
     console.log(
-      `[FocusAgent] Generating task list from ${events.length} events, ${screenshots.length} screenshots, ${openTabs.length} open tabs...`
+      `[FocusAgent] Generating task list from ${events.length} events, ${screenshots.length} screenshots, ${openTabs.length} open tabs...`,
     );
 
     try {
@@ -178,14 +178,16 @@ export class FocusAgent {
                 type: "text",
                 text: `Currently open tabs:\n${openTabsSummary}${previousTaskList}\n\nBrowsing event log (most recent last):\n\n${eventLog}`,
               },
-              ...screenshots.map((shot) => ({
-                type: "text" as const,
-                text: `Screenshot from ${shot.tabId} (${shot.reason}) — ${shot.title || "untitled"} — ${shot.url || ""}`,
-              })),
-              ...screenshots.map((shot) => ({
-                type: "image" as const,
-                image: shot.screenshot,
-              })),
+              ...screenshots.flatMap((shot) => [
+                {
+                  type: "text" as const,
+                  text: `Screenshot from ${shot.tabId} (${shot.reason}) — ${shot.title || "untitled"} — ${shot.url || ""}`,
+                },
+                {
+                  type: "image" as const,
+                  image: shot.screenshot,
+                },
+              ]),
               {
                 type: "text",
                 text: "Based on the event log and screenshots, produce the structured task list.",
@@ -197,7 +199,7 @@ export class FocusAgent {
 
       console.log("[FocusAgent] Task list:", JSON.stringify(object, null, 2));
       this.lastTaskList = object;
-      this.pushToSidebar(object);
+      this.emit("task-list-updated", object);
       return object;
     } catch (err) {
       console.error("[FocusAgent] generateTaskList failed:", err);
@@ -219,17 +221,15 @@ export class FocusAgent {
       (e) =>
         e.type === "screenshot" &&
         e.screenshot &&
-        e.screenshot.length > MIN_DATA_URL_LENGTH
+        e.screenshot.length > MIN_DATA_URL_LENGTH,
     );
-    return screenshotEvents
-      .slice(-MAX_SCREENSHOTS_PER_CALL)
-      .map((e) => ({
-        tabId: e.tabId,
-        url: e.url,
-        title: e.title,
-        reason: e.reason,
-        screenshot: e.screenshot!,
-      }));
+    return screenshotEvents.slice(-MAX_SCREENSHOTS_PER_CALL).map((e) => ({
+      tabId: e.tabId,
+      url: e.url,
+      title: e.title,
+      reason: e.reason,
+      screenshot: e.screenshot!,
+    }));
   }
 
   private serializeEventLog(events: SessionEvent[]): string {
@@ -245,11 +245,5 @@ export class FocusAgent {
         return parts.join(" | ");
       })
       .join("\n");
-  }
-
-  private pushToSidebar(taskList: TaskList): void {
-    if (this.sidebarWebContents) {
-      this.sidebarWebContents.send("task-list-updated", taskList);
-    }
   }
 }

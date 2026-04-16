@@ -31,13 +31,7 @@ export class EventManager {
 
   private handleFocusAgentEvents(): void {
     ipcMain.handle("focus-agent-trigger", async () => {
-      if (!this.mainWindow.sidebar.getIsVisible()) {
-        this.mainWindow.sidebar.toggle();
-        this.mainWindow.updateAllBounds();
-      }
-      // Tell sidebar to show loading state immediately
-      this.mainWindow.sidebar.view.webContents.send("focus-agent-loading");
-      return this.mainWindow.focusAgent.generateTaskList();
+      this.mainWindow.triggerFocusAgent();
     });
 
     ipcMain.handle("focus-on-task", (_, taskTitle: string) => {

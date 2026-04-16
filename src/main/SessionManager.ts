@@ -1,3 +1,5 @@
+const MAX_EVENTS = 500;
+const MAX_SCREENSHOT_AGE_MS = 10 * 60 * 1000; // 10 minutes
 export type SessionEventType =
   | "tab-created"
   | "tab-closed"
@@ -40,6 +42,19 @@ export class SessionManager {
     });
     for (const listener of this.listeners) {
       listener(fullEvent);
+    }
+    this.pruneEvents();
+  }
+
+  private pruneEvents(): void {
+    if (this.events.length > MAX_EVENTS) {
+      this.events = this.events.slice(-MAX_EVENTS);
+    }
+    const cutoff = Date.now() - MAX_SCREENSHOT_AGE_MS;
+    for (const event of this.events) {
+      if (event.screenshot && event.timestamp < cutoff) {
+        event.screenshot = undefined;
+      }
     }
   }
 

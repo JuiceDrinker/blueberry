@@ -1,7 +1,10 @@
 import type { Window } from "./Window";
 
 const SCENARIO = [
-  { action: "navigate", url: "https://www.google.com/search?q=flights+stockholm+to+tokyo" },
+  {
+    action: "navigate",
+    url: "https://www.google.com/search?q=flights+stockholm+to+tokyo",
+  },
   { action: "wait", ms: 2000 },
   { action: "new-tab", url: "https://www.bbc.com/news" },
   { action: "wait", ms: 3000 },
@@ -57,7 +60,9 @@ export async function runSimulation(window: Window): Promise<void> {
       case "switch": {
         const tab = tabs[step.tabIndex];
         if (tab) {
-          console.log(`[Simulate] Switching to tab ${step.tabIndex} (${tab.title})`);
+          console.log(
+            `[Simulate] Switching to tab ${step.tabIndex} (${tab.title})`,
+          );
           window.switchActiveTab(tab.id);
         }
         break;
@@ -69,5 +74,7 @@ export async function runSimulation(window: Window): Promise<void> {
     }
   }
 
-  console.log("[Simulate] Simulation complete. Click the focus icon to generate task list.");
+  console.log(
+    "[Simulate] Simulation complete. Click the focus icon to generate task list.",
+  );
 }

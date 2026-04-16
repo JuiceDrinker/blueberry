@@ -29,8 +29,7 @@ const topBarAPI = {
     electronAPI.ipcRenderer.invoke("tab-run-js", tabId, code),
 
   // Sidebar
-  toggleSidebar: () =>
-    electronAPI.ipcRenderer.invoke("toggle-sidebar"),
+  toggleSidebar: () => electronAPI.ipcRenderer.invoke("toggle-sidebar"),
 
   // Focus agent
   triggerFocusAgent: () =>
@@ -53,4 +52,3 @@ if (process.contextIsolated) {
   // @ts-ignore (define in dts)
   window.topBarAPI = topBarAPI;
 }
-

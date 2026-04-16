@@ -1,5 +1,5 @@
 import { NativeImage, WebContentsView } from "electron";
-import type { ScreenshotReason, SessionManager } from "./SessionTracker";
+import type { ScreenshotReason, SessionManager } from "./SessionManager";
 
 const NAVIGATION_SCREENSHOT_DEBOUNCE_MS = 1500;
 const IDLE_DWELL_MS = 15000;
@@ -18,7 +18,7 @@ export class Tab {
   constructor(
     id: string,
     sessionManager: SessionManager,
-    url: string = "https://www.google.com"
+    url: string = "https://www.google.com",
   ) {
     this._id = id;
     this._url = url;
@@ -136,7 +136,7 @@ export class Tab {
     return this._isVisible;
   }
 
-  get webContents() {
+  get webContents(): Electron.WebContents {
     return this.webContentsView.webContents;
   }
 
@@ -159,6 +159,7 @@ export class Tab {
     return await this.webContentsView.webContents.capturePage();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async runJs(code: string): Promise<any> {
     return await this.webContentsView.webContents.executeJavaScript(code);
   }
