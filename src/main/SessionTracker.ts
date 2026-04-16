@@ -24,8 +24,11 @@ export interface SessionEvent {
   reason?: ScreenshotReason;
 }
 
+export type EventListener = (event: SessionEvent) => void;
+
 export class SessionManager {
   private events: SessionEvent[] = [];
+  private listeners: EventListener[] = [];
 
   logEvent(event: Omit<SessionEvent, "timestamp">): void {
     const fullEvent: SessionEvent = { ...event, timestamp: Date.now() };
@@ -35,6 +38,13 @@ export class SessionManager {
       ...rest,
       ...(screenshot ? { screenshot: `<${screenshot.length} bytes>` } : {}),
     });
+    for (const listener of this.listeners) {
+      listener(fullEvent);
+    }
+  }
+
+  onEvent(listener: EventListener): void {
+    this.listeners.push(listener);
   }
 
   getEvents(): SessionEvent[] {

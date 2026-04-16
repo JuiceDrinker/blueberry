@@ -34,6 +34,10 @@ interface SidebarAPI {
   onTaskListUpdated: (callback: (data: any) => void) => void;
   removeFocusAgentListeners: () => void;
 
+  // Tab actions from focus panel
+  switchTab: (tabId: string) => Promise<boolean>;
+  closeTab: (tabId: string) => Promise<void>;
+
   // Distraction blocking
   focusOnTask: (taskTitle: string) => Promise<{ isBlocking: boolean; focusedTaskTitle: string | null }>;
   unfocusTask: () => Promise<{ isBlocking: boolean; focusedTaskTitle: string | null }>;

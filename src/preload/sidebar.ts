@@ -61,6 +61,12 @@ const sidebarAPI = {
     electronAPI.ipcRenderer.removeAllListeners("task-list-updated");
   },
 
+  // Tab actions from focus panel
+  switchTab: (tabId: string) =>
+    electronAPI.ipcRenderer.invoke("switch-tab", tabId),
+  closeTab: (tabId: string) =>
+    electronAPI.ipcRenderer.invoke("close-tab", tabId),
+
   // Distraction blocking
   focusOnTask: (taskTitle: string) =>
     electronAPI.ipcRenderer.invoke("focus-on-task", taskTitle),

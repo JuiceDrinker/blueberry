@@ -43,6 +43,21 @@ export class Window {
     // Give FocusAgent access to sidebar webContents for pushing task list updates
     this._focusAgent.setSidebarWebContents(this._sideBar.view.webContents);
 
+    // Provide FocusAgent with current open tabs
+    this._focusAgent.setOpenTabsProvider(() =>
+      this.allTabs.map((tab) => ({ id: tab.id, url: tab.url, title: tab.title }))
+    );
+
+    // Auto-trigger: when drift is detected, open sidebar and generate task list
+    this._focusAgent.setAutoTriggerCallback(() => {
+      if (!this._sideBar.getIsVisible()) {
+        this._sideBar.toggle();
+        this.updateAllBounds();
+      }
+      this._sideBar.view.webContents.send("focus-agent-loading");
+      void this._focusAgent.generateTaskList();
+    });
+
     // Create the first tab
     this.createTab();
 
