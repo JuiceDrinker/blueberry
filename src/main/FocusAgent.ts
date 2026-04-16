@@ -63,8 +63,9 @@ export class FocusAgent {
 
   async generateTaskList(): Promise<TaskList | null> {
     const events = this.sessionManager.getEvents();
-    if (events.length === 0) {
-      console.log("[FocusAgent] No events yet — skipping.");
+    const navigationEvents = events.filter((e) => e.type === "navigation");
+    if (navigationEvents.length < 3) {
+      console.log("[FocusAgent] Not enough browsing activity yet — skipping.");
       return null;
     }
 

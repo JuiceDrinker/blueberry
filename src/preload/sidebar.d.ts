@@ -30,8 +30,9 @@ interface SidebarAPI {
   removeChatResponseListener: () => void;
 
   // Focus agent
+  onFocusAgentLoading: (callback: () => void) => void;
   onTaskListUpdated: (callback: (data: any) => void) => void;
-  removeTaskListUpdatedListener: () => void;
+  removeFocusAgentListeners: () => void;
 
   // Distraction blocking
   focusOnTask: (taskTitle: string) => Promise<{ isBlocking: boolean; focusedTaskTitle: string | null }>;

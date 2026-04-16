@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { CheckCircle2, Circle, XCircle, MessageSquare, Target, Shield, ShieldOff } from 'lucide-react'
+import { CheckCircle2, Circle, XCircle, MessageSquare, Target, Shield, ShieldOff, Loader2 } from 'lucide-react'
 import { cn } from '@common/lib/utils'
 
 interface Task {
@@ -17,7 +17,8 @@ interface TaskList {
 }
 
 interface FocusPanelProps {
-    taskList: TaskList
+    taskList: TaskList | null
+    isLoading: boolean
     onBackToChat: () => void
 }
 
@@ -120,7 +121,7 @@ const TaskItem: React.FC<{
     )
 }
 
-export const FocusPanel: React.FC<FocusPanelProps> = ({ taskList, onBackToChat }) => {
+export const FocusPanel: React.FC<FocusPanelProps> = ({ taskList, isLoading, onBackToChat }) => {
     const [focusedTaskTitle, setFocusedTaskTitle] = useState<string | null>(null)
 
     useEffect(() => {
@@ -174,35 +175,52 @@ export const FocusPanel: React.FC<FocusPanelProps> = ({ taskList, onBackToChat }
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto px-4 py-4">
-                {/* Nudge */}
-                {taskList.driftDetected && taskList.nudge && (
-                    <div className={cn(
-                        "p-4 rounded-xl mb-4",
-                        "bg-amber-500/10 border border-amber-500/20",
-                    )}>
-                        <p className="text-sm text-foreground">
-                            {taskList.nudge}
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center h-48 gap-3">
+                        <Loader2 className="size-6 text-muted-foreground animate-spin" />
+                        <p className="text-sm text-muted-foreground">
+                            Analyzing your browsing session...
                         </p>
                     </div>
-                )}
+                ) : taskList ? (
+                    <>
+                        {/* Nudge */}
+                        {taskList.driftDetected && taskList.nudge && (
+                            <div className={cn(
+                                "p-4 rounded-xl mb-4",
+                                "bg-amber-500/10 border border-amber-500/20",
+                            )}>
+                                <p className="text-sm text-foreground">
+                                    {taskList.nudge}
+                                </p>
+                            </div>
+                        )}
 
-                {/* Task list */}
-                <div className="flex flex-col gap-3">
-                    {taskList.tasks.map((task) => (
-                        <TaskItem
-                            key={task.id}
-                            task={task}
-                            focusedTaskTitle={focusedTaskTitle}
-                            onFocus={handleFocus}
-                            onUnfocus={handleUnfocus}
-                        />
-                    ))}
-                </div>
+                        {/* Task list */}
+                        <div className="flex flex-col gap-3">
+                            {taskList.tasks.map((task) => (
+                                <TaskItem
+                                    key={task.id}
+                                    task={task}
+                                    focusedTaskTitle={focusedTaskTitle}
+                                    onFocus={handleFocus}
+                                    onUnfocus={handleUnfocus}
+                                />
+                            ))}
+                        </div>
 
-                {taskList.tasks.length === 0 && (
+                        {taskList.tasks.length === 0 && (
+                            <div className="flex items-center justify-center h-48">
+                                <p className="text-sm text-muted-foreground">
+                                    Not enough browsing activity yet.
+                                </p>
+                            </div>
+                        )}
+                    </>
+                ) : (
                     <div className="flex items-center justify-center h-48">
                         <p className="text-sm text-muted-foreground">
-                            Not enough browsing activity yet.
+                            Click the focus icon to analyze your session.
                         </p>
                     </div>
                 )}

@@ -19,6 +19,7 @@ interface TaskList {
 const SidebarContent: React.FC = () => {
     const { isDarkMode } = useDarkMode()
     const [taskList, setTaskList] = useState<TaskList | null>(null)
+    const [isLoading, setIsLoading] = useState(false)
     const [view, setView] = useState<'chat' | 'focus'>('chat')
 
     useEffect(() => {
@@ -30,21 +31,28 @@ const SidebarContent: React.FC = () => {
     }, [isDarkMode])
 
     useEffect(() => {
+        window.sidebarAPI.onFocusAgentLoading(() => {
+            setIsLoading(true)
+            setView('focus')
+        })
+
         window.sidebarAPI.onTaskListUpdated((data: TaskList) => {
             setTaskList(data)
+            setIsLoading(false)
             setView('focus')
         })
 
         return () => {
-            window.sidebarAPI.removeTaskListUpdatedListener()
+            window.sidebarAPI.removeFocusAgentListeners()
         }
     }, [])
 
     return (
         <div className="h-screen flex flex-col bg-background border-l border-border">
-            {view === 'focus' && taskList ? (
+            {view === 'focus' ? (
                 <FocusPanel
                     taskList={taskList}
+                    isLoading={isLoading}
                     onBackToChat={() => setView('chat')}
                 />
             ) : (

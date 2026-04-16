@@ -46,13 +46,18 @@ const sidebarAPI = {
   },
 
   // Focus agent
+  onFocusAgentLoading: (callback: () => void) => {
+    electronAPI.ipcRenderer.on("focus-agent-loading", () => callback());
+  },
+
   onTaskListUpdated: (callback: (data: any) => void) => {
     electronAPI.ipcRenderer.on("task-list-updated", (_, data) =>
       callback(data)
     );
   },
 
-  removeTaskListUpdatedListener: () => {
+  removeFocusAgentListeners: () => {
+    electronAPI.ipcRenderer.removeAllListeners("focus-agent-loading");
     electronAPI.ipcRenderer.removeAllListeners("task-list-updated");
   },
 

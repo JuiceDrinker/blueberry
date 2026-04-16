@@ -35,6 +35,8 @@ export class EventManager {
         this.mainWindow.sidebar.toggle();
         this.mainWindow.updateAllBounds();
       }
+      // Tell sidebar to show loading state immediately
+      this.mainWindow.sidebar.view.webContents.send("focus-agent-loading");
       return this.mainWindow.focusAgent.generateTaskList();
     });
 
