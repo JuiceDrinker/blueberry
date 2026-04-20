@@ -11,6 +11,7 @@ const DISTRACTION_DOMAINS = [
   "news.ycombinator.com",
   "twitch.tv",
   "discord.com",
+  "bbc.com",
 ];
 
 export class DistractionBlocker {

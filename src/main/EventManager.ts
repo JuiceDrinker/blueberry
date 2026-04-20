@@ -31,7 +31,14 @@ export class EventManager {
 
   private handleFocusAgentEvents(): void {
     ipcMain.handle("focus-agent-trigger", async () => {
-      this.mainWindow.triggerFocusAgent();
+      // Always open sidebar and show focus panel
+      if (!this.mainWindow.sidebar.getIsVisible()) {
+        this.mainWindow.sidebar.toggle();
+        this.mainWindow.updateAllBounds();
+      }
+      this.mainWindow.sidebar.view.webContents.send("show-focus-panel");
+      // Only trigger LLM if not already generating
+      this.mainWindow.focusAgent.trigger();
     });
 
     ipcMain.handle("focus-on-task", (_, taskTitle: string) => {

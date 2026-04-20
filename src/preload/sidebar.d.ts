@@ -31,6 +31,7 @@ interface SidebarAPI {
 
   // Focus agent
   onFocusAgentLoading: (callback: () => void) => void;
+  onShowFocusPanel: (callback: () => void) => void;
   onTaskListUpdated: (callback: (data: Record<string, unknown>) => void) => void;
   removeFocusAgentListeners: () => void;
 

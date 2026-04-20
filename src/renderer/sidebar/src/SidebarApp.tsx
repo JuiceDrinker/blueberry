@@ -40,6 +40,10 @@ const SidebarContent: React.FC = () => {
   taskListRef.current = taskList;
 
   useEffect(() => {
+    window.sidebarAPI.onShowFocusPanel(() => {
+      setView("focus");
+    });
+
     window.sidebarAPI.onFocusAgentLoading(() => {
       if (taskListRef.current) {
         setIsUpdating(true);
@@ -53,7 +57,6 @@ const SidebarContent: React.FC = () => {
       setTaskList(data);
       setIsLoading(false);
       setIsUpdating(false);
-      setView("focus");
     });
 
     return () => {

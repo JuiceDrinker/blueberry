@@ -50,6 +50,10 @@ const sidebarAPI = {
     electronAPI.ipcRenderer.on("focus-agent-loading", () => callback());
   },
 
+  onShowFocusPanel: (callback: () => void) => {
+    electronAPI.ipcRenderer.on("show-focus-panel", () => callback());
+  },
+
   onTaskListUpdated: (callback: (data: Record<string, unknown>) => void) => {
     electronAPI.ipcRenderer.on("task-list-updated", (_, data) =>
       callback(data),
@@ -59,6 +63,7 @@ const sidebarAPI = {
   removeFocusAgentListeners: () => {
     electronAPI.ipcRenderer.removeAllListeners("focus-agent-loading");
     electronAPI.ipcRenderer.removeAllListeners("task-list-updated");
+    electronAPI.ipcRenderer.removeAllListeners("show-focus-panel");
   },
 
   // Tab actions from focus panel
